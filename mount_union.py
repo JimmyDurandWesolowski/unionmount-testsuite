@@ -1,3 +1,4 @@
+import os
 from tool_box import *
 
 def mount_union(ctx):
@@ -22,11 +23,13 @@ def mount_union(ctx):
     else:
         lower_mntroot = cfg.lower_mntroot()
         upper_mntroot = cfg.upper_mntroot()
+        if not os.path.exists(upper_mntroot):
+            os.makedirs(upper_mntroot)
         system("mount -t tmpfs upper_layer " + upper_mntroot)
         upperdir = upper_mntroot + "/upper"
         workdir = upper_mntroot + "/work"
         os.mkdir(upperdir)
         os.mkdir(workdir)
-        system("mount -t overlayfs overlayfs " + union_mntroot +
+        system("mount -t overlay overlayfs " + union_mntroot +
                " -olowerdir=" + lower_mntroot + ",upperdir=" + upperdir + ",workdir=" + workdir)
         ctx.note_upper_fs(upper_mntroot, testdir)

@@ -48,6 +48,8 @@ def set_up(ctx):
             pass
 
     # Create a lower layer to union over
+    if not os.path.exists(lower_mntroot):
+        os.makedirs(lower_mntroot)
     system("mount -t tmpfs lower_layer " + lower_mntroot)
 
     # Systemd has weird ideas about things

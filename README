@@ -1,13 +1,8 @@
 To run these tests:
 
- (1) Run make
+ (1) Make sure you have root permissions
 
- (2) Copy fs-op and open-file to /usr/local/bin/
-
- (3) If testing unionmount, do:
-
-	./run
-
-     If testing overlayfs, do:
-
-	TEST_OVERLAYFS=1 ./run.sh
+ (2) Run
+ ./run --ov
+ ./run --no
+ ./run --um (might not work because of the incorrect path)
