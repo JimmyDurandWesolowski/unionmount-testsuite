@@ -3,6 +3,19 @@ To run these tests:
  (1) Make sure you have root permissions
 
  (2) Run
- ./run --ov
- ./run --no
- ./run --um (might not work because of the incorrect path)
+     If testing unionmount, do:
+
+	./run --um
+
+     If testing overlayfs, do:
+
+	./run --ov
+
+     To run the tests without any unioning, do:
+
+	./run --no
+
+     To just set up the environment and exit without doing any tests,
+     add the --set-up flag, eg:
+
+	./run --ov --set-up
