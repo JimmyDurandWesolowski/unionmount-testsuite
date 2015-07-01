@@ -175,10 +175,9 @@ class test_context:
         self.__verbose = cfg.is_verbose()
         self.__direct_mode = direct_mode
         self.__skip_layer_test = cfg.testing_none()
-        if cfg.is_termslash():
+        self.__termslash = ""
+        if termslash:
             self.__termslash = "/"
-        else:
-            self.__termslash = ""
 
     def config(self):
         return self.__cfg
@@ -425,16 +424,18 @@ class test_context:
             try:
                 self.verbosef("os.rmdir({:s})\n", f)
                 os.rmdir(f)
-            except FileNotFoundError:
-                pass
+            except OSError as e:
+                if e.errno == errno.ENOENT:
+                    pass
         elif not cursor.is_negative():
             self.verbosef("os.unlink({:s})\n", f)
             os.unlink(f)
             try:
                 self.verbosef("os.unlink({:s})\n", f)
                 os.unlink(f)
-            except FileNotFoundError:
-                pass
+            except OSError as e:
+                if e.errno == errno.ENOENT:
+                    pass
 
     def rmtree(self, filename):
         self.output("- rmtree ", filename, "\n")
@@ -457,9 +458,10 @@ class test_context:
         name = dentry.filename()
         try:
             dev = self.get_dev_id(name)
-        except (FileNotFoundError, NotADirectoryError):
-            if not dentry.is_negative():
-                raise TestError(name + ": File is missing")
+        except OSError as e:
+            if e.errno == errno.ENOENT or e.errno == errno.ENOTDIR:
+                if not dentry.is_negative():
+                    raise TestError(name + ": File is missing")
             return
 
         if dentry.is_negative():
@@ -872,7 +874,10 @@ class test_context:
 
         try:
             self.verbosef("os.link({:s},{:s})\n", filename, filename2)
-            os.link(filename, filename2, follow_symlinks=follow_symlinks)
+            if sys.version_info[0] == 2:
+                os.link(filename, filename2)
+            else:
+                os.link(filename, filename2, follow_symlinks=follow_symlinks)
             dentry.copied_up()
             self.vfs_op_success(filename, dentry, args, copy_up=True)
             self.vfs_op_success(filename2, dentry2, args, create=True, filetype=dentry.filetype(),
@@ -968,8 +973,14 @@ class test_context:
         dentry = self.vfs_op_prelude(line, filename, args)
 
         try:
-            self.verbose("os.truncate(", filename, ",", size, ")\n")
-            os.truncate(filename, size)
+            if sys.version_info[0] == 2:
+                self.verbose("os.ftruncate(", filename, ",", size, ")\n")
+                truncate_fd = os.open(filename, os.O_RDWR)
+                os.ftruncate(truncate_fd, size)
+                os.close(truncate_fd)
+            else:
+                self.verbose("os.truncate(", filename, ",", size, ")\n")
+                os.truncate(filename, size)
             self.vfs_op_success(filename, dentry, args, copy_up=True)
         except OSError as oe:
             self.vfs_op_error(oe, filename, dentry, args)
@@ -1007,7 +1018,10 @@ class test_context:
 
         try:
             self.verbosef("os.utime({:s},follow_symlinks={:d})\n", filename, follow)
-            os.utime(filename, follow_symlinks=follow)
+            if sys.version_info[0] == 2:
+                os.utime(filename, None) # os.utime follow symbolic links by default
+            else:
+                os.utime(filename, follow_symlinks=follow)
             self.vfs_op_success(filename, dentry, args, copy_up=True)
         except OSError as oe:
             self.vfs_op_error(oe, filename, dentry, args)
