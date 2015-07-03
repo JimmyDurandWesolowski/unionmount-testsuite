@@ -108,13 +108,15 @@ if len(args) > 0 and args[0] == "--set-up":
     mount_union(ctx)
     sys.exit(0)
 
+
+termslash_list = [ "0", "1" ]
 while len(args) > 0 and args[0].startswith("-"):
     if args[0] == "-v":
         cfg.set_verbose()
     elif args[0] == "--ts=0":
-        cfg.set_termslash(False)
+        termslash_list = [ "0" ]
     elif args[0] == "--ts=1":
-        cfg.set_termslash(True)
+        termslash_list = [ "1" ]
     else:
         show_format("Invalid flag " + args[0])
     args = args[1:]
@@ -192,13 +194,6 @@ elif cfg.testing_overlayfs():
 else:
     test_what = "--no"
 
-if cfg.is_termslash() == None:
-    termslash_list = [ "0", "1" ]
-elif cfg.is_termslash() == True:
-    termslash_list = [ "1" ]
-else:
-    termslash_list = [ "0" ]
-
 for test in tests:
     for ts in termslash_list:
         print("***");
@@ -210,7 +205,12 @@ for test in tests:
         # Construct the union
         set_up(ctx)
         mount_union(ctx)
-        os.sync()
+        if sys.version_info[0] == 2:
+            import ctypes
+            libc = ctypes.CDLL("libc.so.6")
+            libc.sync()
+        else:
+            os.sync()
 
         # Run a test script
         script = __import__("tests." + test, globals(), locals(), ['subtests'])

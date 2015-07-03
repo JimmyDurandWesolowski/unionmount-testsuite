@@ -2,7 +2,7 @@
 # Create and set up a lower layer for the test scripts to use
 #
 from tool_box import *
-import os, shutil
+import os, shutil, sys
 
 def create_file(name, content):
     fd = open(name, "w")
@@ -15,7 +15,12 @@ def set_up(ctx):
     lowerdir = cfg.lowerdir()
     testdir = cfg.testdir()
 
-    os.sync()
+    if sys.version_info[0] == 2:
+        import ctypes
+        libc = ctypes.CDLL("libc.so.6")
+        libc.sync()
+    else:
+        os.sync()
 
     # Discard anything already mounted on the mountpoint to avoid contamination
     # as unionmount tries to collect all the mounts located there into the
