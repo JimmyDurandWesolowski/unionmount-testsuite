@@ -602,7 +602,7 @@ class test_context:
         if want_error:
             line += " -E " + errno.errorcode[want_error]
 
-        self.output(" ./run --open-file ", filename, line, "\n")
+        self.verbose(" ./run --open-file ", filename, line, "\n")
 
         # Open the file
         try:
@@ -784,7 +784,7 @@ class test_context:
             line += " -B"
         if want_error:
             line += " -E " + errno.errorcode[want_error]
-        self.output(" ./run --", line, "\n")
+        self.verbose(" ./run --", line, "\n")
 
         self.check_layer(filename)
         if filename2 != None:
