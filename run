@@ -194,6 +194,7 @@ elif cfg.testing_overlayfs():
 else:
     test_what = "--no"
 
+errors=[]
 for test in tests:
     for ts in termslash_list:
         print("***");
@@ -214,36 +215,38 @@ for test in tests:
 
         # Run a test script
         script = __import__("tests." + test, globals(), locals(), ['subtests'])
-        try:
-            subtests = []
-            for name in dir(script):
-                if not name.startswith("subtest_"):
-                    continue
-                subtest = getattr(script, name)
-                if type(subtest) != types.FunctionType:
-                    continue
-                subtests.append((inspect.getfile(subtest),
-                                 inspect.getsourcelines(subtest)[1],
-                                 subtest.__doc__,
-                                 subtest))
+        subtests = []
+        for name in dir(script):
+            if not name.startswith("subtest_"):
+                continue
+            subtest = getattr(script, name)
+            if type(subtest) != types.FunctionType:
+                continue
+            subtests.append((inspect.getfile(subtest),
+                             inspect.getsourcelines(subtest)[1],
+                             subtest.__doc__,
+                             subtest))
 
-            # Perform the subtests in the order they're defined in the file
-            for (f, line, doc, func) in sorted(subtests, key=lambda s: s[1]):
+        # Perform the subtests in the order they're defined in the file
+        for (f, line, doc, func) in sorted(subtests, key=lambda s: s[1]):
+            try:
                 ctx.begin_test(f, line, doc)
                 func(ctx)
-
-        except TestError as te:
-            print(te)
-            sys.exit(1)
+            except (TestError, OSError) as te:
+                errors.append(("%s:%d: %s" % (f, line, doc), te))
+                print(te)
 
         # Stop if the kernel is now tainted
         check_not_tainted()
 
+        if not len(errors):
         # Make sure that all dentries and inodes are correctly released
-        unmount_union(ctx)
-        del ctx
+            unmount_union(ctx)
+            del ctx
 
-# Leave the union mounted for further playing
-ctx = test_context(cfg)
-set_up(ctx)
-mount_union(ctx)
+# Leave the union mounted in case of errors
+if len(errors):
+    print("The following errors have been encountered:")
+    for (test, error) in errors:
+        print("  " + test)
+        print("    " + str(error))
