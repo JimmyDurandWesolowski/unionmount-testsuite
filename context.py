@@ -728,48 +728,47 @@ class test_context:
             args["err"] = args["xerr"]
 
         if not want_error:
-	        if not tslash_ok and filename.endswith("/"):
-	            if not dentry.is_negative():
-	                if dentry.is_sym():
-	                    if dentry.is_dir_or_sym_to_dir():
-	                        if expect_sym:
-	                            args["err"] = errno.EINVAL
-	                        else:
-	                            args["err"] = errno.ENOTDIR
-	                    elif expect_sym and dentry.is_neg_or_sym_to_neg():
-	                        args["err"] = errno.ENOENT
-	                    else:
-	                        args["err"] = errno.ENOTDIR
-	                elif dentry.is_reg_or_sym_to_reg():
-	                    if create:
-	                        args["err"] = errno.EISDIR
-	                    else:
-	                        args["err"] = errno.ENOTDIR
-	            elif dentry.is_negative():
-	                if create:
-	                    args["err"] = errno.EISDIR
-	                elif dentry.did_create_fail():
-	                    args["err"] = errno.ENOENT
+            if not tslash_ok and filename.endswith("/"):
+                if not dentry.is_negative():
+                    if dentry.is_sym():
+                        if dentry.is_dir_or_sym_to_dir():
+                            if expect_sym:
+                                args["err"] = errno.EINVAL
+                            else:
+                                args["err"] = errno.ENOTDIR
+                        elif expect_sym and dentry.is_neg_or_sym_to_neg():
+                            args["err"] = errno.ENOENT
+                        else:
+                            args["err"] = errno.ENOTDIR
+                    elif dentry.is_reg_or_sym_to_reg():
+                        if create:
+                            args["err"] = errno.EISDIR
+                        else:
+                            args["err"] = errno.ENOTDIR
+                elif dentry.is_negative():
+                    if create:
+                        args["err"] = errno.EISDIR
+                    elif dentry.did_create_fail():
+                        args["err"] = errno.ENOENT
 
-	        if filename2 != None and not tslash_ok and \
+            if filename2 != None and not tslash_ok and \
                    filename2.endswith("/"):
-	            if not dentry2.is_negative():
-	                if dentry2.is_sym():
-	                    if dentry2.is_dir_or_sym_to_dir():
-	                        if expect_sym:
-	                            args["err"] = errno.EINVAL
-	                        else:
-	                            args["err"] = errno.ENOTDIR
-	                    elif expect_sym and dentry2.is_neg_or_sym_to_neg():
-	                        args["err"] = errno.ENOENT
-	                    else:
-	                        args["err"] = errno.ENOTDIR
-	                elif dentry2.is_reg_or_sym_to_reg():
-	                    args["err"] = errno.EISDIR
-	            elif dentry2.is_negative():
-	                args["err"] = errno.EISDIR
-
-                want_error = args["err"]
+                if not dentry2.is_negative():
+                    if dentry2.is_sym():
+                        if dentry2.is_dir_or_sym_to_dir():
+                            if expect_sym:
+                                args["err"] = errno.EINVAL
+                            else:
+                                args["err"] = errno.ENOTDIR
+                        elif expect_sym and dentry2.is_neg_or_sym_to_neg():
+                            args["err"] = errno.ENOENT
+                        else:
+                            args["err"] = errno.ENOTDIR
+                    elif dentry2.is_reg_or_sym_to_reg():
+                        args["err"] = errno.EISDIR
+                elif dentry2.is_negative():
+                    args["err"] = errno.EISDIR
+            want_error = args["err"]
 
         # Build the commandline to repeat the test
         if "follow" in args:
